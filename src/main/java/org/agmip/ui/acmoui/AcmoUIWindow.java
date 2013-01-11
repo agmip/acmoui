@@ -10,6 +10,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.logging.Level;
 import java.util.prefs.Preferences;
 import org.apache.pivot.beans.Bindable;
 import org.apache.pivot.collections.Map;
@@ -27,10 +28,13 @@ import org.apache.pivot.wtk.ButtonPressListener;
 import org.apache.pivot.wtk.ButtonStateListener;
 import org.apache.pivot.wtk.Checkbox;
 import org.apache.pivot.wtk.Component;
+import org.apache.pivot.wtk.ComponentMouseButtonListener;
 import org.apache.pivot.wtk.DesktopApplicationContext;
 import org.apache.pivot.wtk.FileBrowserSheet;
 import org.apache.pivot.wtk.Label;
+import org.apache.pivot.wtk.LinkButton;
 import org.apache.pivot.wtk.MessageType;
+import org.apache.pivot.wtk.Mouse;
 import org.apache.pivot.wtk.Orientation;
 import org.apache.pivot.wtk.PushButton;
 import org.apache.pivot.wtk.Sheet;
@@ -38,6 +42,7 @@ import org.apache.pivot.wtk.SheetCloseListener;
 import org.apache.pivot.wtk.TaskAdapter;
 import org.apache.pivot.wtk.TextInput;
 import org.apache.pivot.wtk.Window;
+import org.apache.pivot.wtk.content.ButtonData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,11 +60,14 @@ public class AcmoUIWindow extends Window implements Bindable {
     private Label txtVersion = null;
     private TextInput outputText = null;
     private TextInput convertText = null;
+    private LinkButton outputLB = null;
+    private Label outputLink = null;
     private ArrayList<Checkbox> checkboxGroup = new ArrayList();
     private ArrayList<String> errors = new ArrayList();
     private Properties versionProperties = new Properties();
     private String acmoVersion = "";
     private Preferences pref = Preferences.userNodeForPackage(getClass());
+    private ComponentMouseButtonListener outputLinkLsn = null;
 
     public AcmoUIWindow() {
         try {
@@ -117,6 +125,8 @@ public class AcmoUIWindow extends Window implements Bindable {
         outputCB = (Checkbox) ns.get("outputCB");
         modelApsim = (Checkbox) ns.get("model-apsim");
         modelDssat = (Checkbox) ns.get("model-dssat");
+        outputLB = (LinkButton) ns.get("outputLB");
+        outputLink = (Label) ns.get("outputLBText");
 
         checkboxGroup.add(modelApsim);
         checkboxGroup.add(modelDssat);
@@ -234,6 +244,10 @@ public class AcmoUIWindow extends Window implements Bindable {
         convertIndicator.setActive(true);
         convertButton.setEnabled(false);
         txtStatus.setText("Importing data...");
+        outputLink.setText("");
+        if (outputLinkLsn != null) {
+            outputLink.getComponentMouseButtonListeners().remove(outputLinkLsn);
+        }
         TranslateFromTask task = new TranslateFromTask(convertText.getText());
         TaskListener<HashMap> listener = new TaskListener<HashMap>() {
             @Override
@@ -284,6 +298,27 @@ public class AcmoUIWindow extends Window implements Bindable {
                 convertIndicator.setActive(false);
                 convertButton.setEnabled(true);
                 LOG.info("=== Completed translation job ===");
+                final String file = arg0.getResult();
+                outputLink.setText(new File(file).getName());
+                outputLinkLsn = new ComponentMouseButtonListener() {
+                    @Override
+                    public boolean mouseDown(Component cmpnt, Mouse.Button button, int i, int i1) {
+                        return true;
+                    }
+                    @Override
+                    public boolean mouseUp(Component cmpnt, Mouse.Button button, int i, int i1) {
+                        return true;
+                    }
+                    @Override
+                    public boolean mouseClick(Component cmpnt, Mouse.Button button, int i, int i1, int i2) {
+                        try {
+                            Runtime.getRuntime().exec("cmd /c start \"\" \""+ file + "\"");
+                        } catch (IOException ex) {
+                        }
+                        return true;
+                    }
+                };
+                outputLink.getComponentMouseButtonListeners().add(outputLinkLsn);
             }
         };
         task.execute(new TaskAdapter(listener));

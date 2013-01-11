@@ -87,6 +87,13 @@
                             <Label text="Status:" styles="{font:{bold:true}}" /><Label bxml:id="txtStatus" />
                         </BoxPane>
                     </BoxPane>
+                    <BoxPane orientation="vertical" styles="{padding:6}">
+                        <BoxPane orientation="horizontal">
+                            <Label text="Output:" styles="{font:{bold:true}}" />
+                            <Label text=" (Click to open)" />
+                        </BoxPane>
+                        <Label bxml:id="outputLBText"/>
+                    </BoxPane>
                 </BoxPane>
             </Border>
         </TablePane.Row>

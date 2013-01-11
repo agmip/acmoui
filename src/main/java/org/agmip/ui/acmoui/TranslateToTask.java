@@ -33,14 +33,16 @@ public class TranslateToTask extends Task<String> {
     @Override
     public String execute() throws TaskExecutionException {
         ExecutorService executor = Executors.newFixedThreadPool(64);
-        TranslatorOutput translator;
+        TranslatorOutput[] translators = new TranslatorOutput[translateList.size()];
+        File output;
         try {
-            for (String tr : translateList) {
+            for (int i = 0; i< translateList.size(); i++) {
+                String tr = translateList.get(i);
                 if (tr.equals("DSSAT")) {
-                    translator = new AcmoDssatCsvOutput();
+                    translators[i] = new AcmoDssatCsvOutput();
                     String destination = destDirectory + File.separator + tr;
-                    LOG.debug("Translating with :" + translator.getClass().getName());
-                    Runnable thread = new TranslateRunner(translator, data, destination);
+                    LOG.debug("Translating with :" + translators[i].getClass().getName());
+                    Runnable thread = new TranslateRunner(translators[i], data, destination);
                     executor.execute(thread);
                 } else if (tr.equals("APSIM")){
                 } else {
@@ -50,9 +52,10 @@ public class TranslateToTask extends Task<String> {
             while (!executor.isTerminated()) {
             }
             executor = null;
+            output = ((AcmoDssatCsvOutput) translators[0]).getOutputFile(); // TODO
         } catch (Exception ex) {
             throw new TaskExecutionException(ex);
         }
-        return null;
+        return output.getAbsolutePath();
     }
 }
