@@ -11,6 +11,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.prefs.Preferences;
 import org.agmip.translators.acmo.AcmoCsvTranslator;
 import org.apache.pivot.beans.Bindable;
 import org.apache.pivot.collections.Map;
@@ -66,6 +67,7 @@ public class AcmoUIWindow extends Window implements Bindable {
     private Properties versionProperties = new Properties();
     private String acmoVersion = "";
     private String mode = "";
+    private Preferences pref = Preferences.userRoot().node("acmoui");
 
     public AcmoUIWindow() {
         try {
@@ -166,7 +168,12 @@ public class AcmoUIWindow extends Window implements Bindable {
             public void buttonPressed(Button button) {
                 final FileBrowserSheet browse;
                 if (convertText.getText().equals("")) {
-                    browse = new FileBrowserSheet(FileBrowserSheet.Mode.OPEN);
+                    String lastPath = pref.get("last_Input", "");
+                    if (lastPath.equals("")) {
+                        browse = new FileBrowserSheet(FileBrowserSheet.Mode.OPEN);
+                    } else {
+                        browse = new FileBrowserSheet(FileBrowserSheet.Mode.OPEN, lastPath);
+                    }
                 } else {
                     File f = new File(convertText.getText());
                     browse = new FileBrowserSheet(FileBrowserSheet.Mode.OPEN, f.getParent());
@@ -188,11 +195,13 @@ public class AcmoUIWindow extends Window implements Bindable {
                             File convertFile = browse.getSelectedFile();
                             convertText.setText(convertFile.getPath());
 //                            if (outputText.getText().equals("")) {
-                            if (outputCB.getState().equals(State.SELECTED)) {
-                                try {
-                                    outputText.setText(convertFile.getCanonicalFile().getParent());
-                                } catch (IOException ex) {
+                            try {
+                                String lastPath = convertFile.getCanonicalFile().getParent();
+                                if (outputCB.getState().equals(State.SELECTED)) {
+                                    outputText.setText(lastPath);
                                 }
+                                pref.put("last_Input", lastPath);
+                            } catch (IOException ex) {
                             }
                         }
                     }
@@ -205,7 +214,12 @@ public class AcmoUIWindow extends Window implements Bindable {
             public void buttonPressed(Button button) {
                 final FileBrowserSheet browse;
                 if (outputText.getText().equals("")) {
-                    browse = new FileBrowserSheet(FileBrowserSheet.Mode.SAVE_TO);
+                    String lastPath = pref.get("last_Output", "");
+                    if (lastPath.equals("")) {
+                        browse = new FileBrowserSheet(FileBrowserSheet.Mode.SAVE_TO);
+                    } else {
+                        browse = new FileBrowserSheet(FileBrowserSheet.Mode.SAVE_TO, lastPath);
+                    }
                 } else {
                     browse = new FileBrowserSheet(FileBrowserSheet.Mode.SAVE_TO, outputText.getText());
                 }
@@ -220,7 +234,7 @@ public class AcmoUIWindow extends Window implements Bindable {
                 });
             }
         });
-        
+
         outputCB.getButtonStateListeners().add(new ButtonStateListener() {
             @Override
             public void stateChanged(Button button, State state) {
@@ -321,7 +335,7 @@ public class AcmoUIWindow extends Window implements Bindable {
         try {
             obDssatAcmoCsvTanslator.writeCsvFile(filePath, convertText.getText());
             txtStatus.setText("Completed");
-                    LOG.info("Job done");
+            LOG.info("Job done");
         } catch (FileNotFoundException ex) {
             if (ex.getMessage().contains("The process cannot access the file because it is being used by another process")) {
                 Alert.alert(MessageType.ERROR, "CSV file is opened by other process.", AcmoUIWindow.this);
