@@ -67,7 +67,7 @@ public class AcmoUIWindow extends Window implements Bindable {
     private Properties versionProperties = new Properties();
     private String acmoVersion = "";
     private String mode = "";
-    private Preferences pref = Preferences.userRoot().node("acmoui");
+    private Preferences pref = Preferences.userNodeForPackage(getClass());
 
     public AcmoUIWindow() {
         try {
