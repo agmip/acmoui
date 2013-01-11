@@ -34,7 +34,7 @@
             <Border styles="{padding:2, color: '#777777'}">
                 <BoxPane orientation="vertical" styles="{padding:{bottom:16, left: 6}}">
                     <BoxPane orientation="vertical" styles="{padding: 6}">
-                        <Label text="Output Data To Convert:" styles="{font:{bold:true}}" />
+                        <Label text="Model Output Data To Convert:" styles="{font:{bold:true}}" />
                         <BoxPane orientation="horizontal"><TextInput bxml:id="convertText" editable="false"/><PushButton bxml:id="browseConvertButton" buttonData="Browse"/></BoxPane>
                     </BoxPane>
 <!--
@@ -61,7 +61,8 @@
 -->
                     <BoxPane orientation="vertical" styles="{padding: 6}">
                         <Label text="CSV Output Directory:" styles="{font:{bold:true}}" />
-                        <BoxPane orientation="horizontal"><TextInput bxml:id="outputText" editable="false"/><PushButton bxml:id="browseOutputButton" buttonData="Browse"/></BoxPane>
+                        <BoxPane orientation="horizontal"><TextInput bxml:id="outputText" editable="false"/><PushButton bxml:id="browseOutputButton" buttonData="Browse" enabled="false"/></BoxPane>
+                        <BoxPane orientation="horizontal"><Checkbox bxml:id="outputCB" buttonData="Same with input Directory" state="selected"/></BoxPane>
                     </BoxPane>
                     <BoxPane orientation="vertical" styles="{padding:6}">
                         <Border title="Data from:" styles="{padding:6}">

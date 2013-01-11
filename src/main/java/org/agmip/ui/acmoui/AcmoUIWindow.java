@@ -1,34 +1,29 @@
 package org.agmip.ui.acmoui;
 
-import java.net.URL;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
-import java.util.Scanner;
 import org.agmip.translators.acmo.AcmoCsvTranslator;
-
-
 import org.apache.pivot.beans.Bindable;
 import org.apache.pivot.collections.Map;
-import org.apache.pivot.util.Resources;
 import org.apache.pivot.util.Filter;
-import org.apache.pivot.util.concurrent.Task;
-import org.apache.pivot.util.concurrent.TaskListener;
+import org.apache.pivot.util.Resources;
 import org.apache.pivot.wtk.Action;
 import org.apache.pivot.wtk.ActivityIndicator;
 import org.apache.pivot.wtk.Alert;
 import org.apache.pivot.wtk.BoxPane;
 import org.apache.pivot.wtk.Button;
-import org.apache.pivot.wtk.ButtonGroup;
-import org.apache.pivot.wtk.ButtonGroupListener;
+import org.apache.pivot.wtk.Button.State;
 import org.apache.pivot.wtk.ButtonPressListener;
+import org.apache.pivot.wtk.ButtonStateListener;
 import org.apache.pivot.wtk.Checkbox;
 import org.apache.pivot.wtk.Component;
 import org.apache.pivot.wtk.DesktopApplicationContext;
@@ -39,13 +34,8 @@ import org.apache.pivot.wtk.Orientation;
 import org.apache.pivot.wtk.PushButton;
 import org.apache.pivot.wtk.Sheet;
 import org.apache.pivot.wtk.SheetCloseListener;
-import org.apache.pivot.wtk.TaskAdapter;
 import org.apache.pivot.wtk.TextInput;
 import org.apache.pivot.wtk.Window;
-
-import static org.agmip.util.JSONAdapter.*;
-import org.agmip.util.MapUtil;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +49,7 @@ public class AcmoUIWindow extends Window implements Bindable {
 //    private PushButton browseFieldFile = null;
 //    private PushButton browseStrategyFile = null;
 //    private ButtonGroup runType = null;
+    private Checkbox outputCB = null;
     private Checkbox modelApsim = null;
     private Checkbox modelDssat = null;
 //    private Checkbox modelJson = null;
@@ -136,6 +127,7 @@ public class AcmoUIWindow extends Window implements Bindable {
         outputText = (TextInput) ns.get("outputText");
 //        fieldText = (TextInput) ns.get("fieldText");
 //        strategyText = (TextInput) ns.get("strategyText");
+        outputCB = (Checkbox) ns.get("outputCB");
         modelApsim = (Checkbox) ns.get("model-apsim");
         modelDssat = (Checkbox) ns.get("model-dssat");
 //        modelJson = (Checkbox) ns.get("model-json");
@@ -173,10 +165,11 @@ public class AcmoUIWindow extends Window implements Bindable {
             @Override
             public void buttonPressed(Button button) {
                 final FileBrowserSheet browse;
-                if (outputText.getText().equals("")) {
+                if (convertText.getText().equals("")) {
                     browse = new FileBrowserSheet(FileBrowserSheet.Mode.OPEN);
                 } else {
-                    browse = new FileBrowserSheet(FileBrowserSheet.Mode.OPEN, outputText.getText());
+                    File f = new File(convertText.getText());
+                    browse = new FileBrowserSheet(FileBrowserSheet.Mode.OPEN, f.getParent());
                 }
                 browse.setDisabledFileFilter(new Filter<File>() {
                     @Override
@@ -194,7 +187,8 @@ public class AcmoUIWindow extends Window implements Bindable {
                         if (sheet.getResult()) {
                             File convertFile = browse.getSelectedFile();
                             convertText.setText(convertFile.getPath());
-                            if (outputText.getText().equals("")) {
+//                            if (outputText.getText().equals("")) {
+                            if (outputCB.getState().equals(State.SELECTED)) {
                                 try {
                                     outputText.setText(convertFile.getCanonicalFile().getParent());
                                 } catch (IOException ex) {
@@ -224,6 +218,17 @@ public class AcmoUIWindow extends Window implements Bindable {
                         }
                     }
                 });
+            }
+        });
+        
+        outputCB.getButtonStateListeners().add(new ButtonStateListener() {
+            @Override
+            public void stateChanged(Button button, State state) {
+                if (button.getState().equals(State.UNSELECTED)) {
+                    browseOutputDir.setEnabled(true);
+                } else {
+                    browseOutputDir.setEnabled(false);
+                }
             }
         });
 
