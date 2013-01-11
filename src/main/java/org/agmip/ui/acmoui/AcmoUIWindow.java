@@ -151,7 +151,7 @@ public class AcmoUIWindow extends Window implements Bindable {
                 final FileBrowserSheet browse;
                 if (convertText.getText().equals("")) {
                     String lastPath = pref.get("last_Input", "");
-                    if (lastPath.equals("")) {
+                    if (lastPath.equals("") || new File(lastPath).exists()) {
                         browse = new FileBrowserSheet(FileBrowserSheet.Mode.OPEN);
                     } else {
                         browse = new FileBrowserSheet(FileBrowserSheet.Mode.OPEN, lastPath);
@@ -197,7 +197,7 @@ public class AcmoUIWindow extends Window implements Bindable {
                 final FileBrowserSheet browse;
                 if (outputText.getText().equals("")) {
                     String lastPath = pref.get("last_Output", "");
-                    if (lastPath.equals("")) {
+                    if (lastPath.equals("") || new File(lastPath).exists()) {
                         browse = new FileBrowserSheet(FileBrowserSheet.Mode.SAVE_TO);
                     } else {
                         browse = new FileBrowserSheet(FileBrowserSheet.Mode.SAVE_TO, lastPath);
@@ -211,6 +211,7 @@ public class AcmoUIWindow extends Window implements Bindable {
                         if (sheet.getResult()) {
                             File outputDir = browse.getSelectedFile();
                             outputText.setText(outputDir.getPath());
+                            pref.put("last_Output", outputDir.getPath());
                         }
                     }
                 });
