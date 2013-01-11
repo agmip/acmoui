@@ -8,10 +8,11 @@
     <packaging>jar</packaging>
 
     <name>acmoui</name>
-    <url>http://maven.apache.org</url>
+    <url>http://www.agmip.org</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jdk.version>1.6</jdk.version>
     </properties>
 
     <dependencies>
@@ -108,7 +109,7 @@
                             </descriptorRefs>
                             <archive>
                                 <manifest>
-                                    <mainClass>org.agmip.ui.quadui.AcmoUIApp</mainClass>
+                                    <mainClass>org.agmip.ui.acmoui.AcmoUIApp</mainClass>
                                 </manifest>
                             </archive>
                         </configuration>
