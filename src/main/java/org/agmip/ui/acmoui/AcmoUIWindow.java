@@ -164,9 +164,9 @@ public class AcmoUIWindow extends Window implements Bindable {
                     @Override
                     public boolean include(File file) {
                         return (file.isFile()
-//                                && (!file.getName().toLowerCase().endsWith(".csv"))
-//                                && (!file.getName().toLowerCase().endsWith(".agmip"))
-//                                && (!file.getName().toLowerCase().endsWith(".json"))
+                                //                                && (!file.getName().toLowerCase().endsWith(".csv"))
+                                //                                && (!file.getName().toLowerCase().endsWith(".agmip"))
+                                //                                && (!file.getName().toLowerCase().endsWith(".json"))
                                 && (!file.getName().toLowerCase().endsWith(".zip")));
                     }
                 });
@@ -258,7 +258,7 @@ public class AcmoUIWindow extends Window implements Bindable {
     }
 
     private void toOutput(HashMap map) {
-        txtStatus.setText("Generating model input files...");
+        txtStatus.setText("Generating ACMO.CSV file...");
         ArrayList<String> models = new ArrayList();
         if (modelApsim.isSelected()) {
             models.add("APSIM");
