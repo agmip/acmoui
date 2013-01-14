@@ -10,7 +10,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
-import java.util.logging.Level;
 import java.util.prefs.Preferences;
 import org.apache.pivot.beans.Bindable;
 import org.apache.pivot.collections.Map;
@@ -42,7 +41,6 @@ import org.apache.pivot.wtk.SheetCloseListener;
 import org.apache.pivot.wtk.TaskAdapter;
 import org.apache.pivot.wtk.TextInput;
 import org.apache.pivot.wtk.Window;
-import org.apache.pivot.wtk.content.ButtonData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -248,7 +246,6 @@ public class AcmoUIWindow extends Window implements Bindable {
         if (outputLinkLsn != null) {
             outputLink.getComponentMouseButtonListeners().remove(outputLinkLsn);
         }
-        TranslateFromTask task = new TranslateFromTask(convertText.getText());
         TaskListener<HashMap> listener = new TaskListener<HashMap>() {
             @Override
             public void taskExecuted(Task<HashMap> t) {
@@ -268,7 +265,21 @@ public class AcmoUIWindow extends Window implements Bindable {
                 convertButton.setEnabled(true);
             }
         };
-        task.execute(new TaskAdapter(listener));
+        try {
+            TranslateFromTask task = new TranslateFromTask(convertText.getText());
+            task.execute(new TaskAdapter(listener));
+        } catch (Exception ex) {
+            convertIndicator.setActive(false);
+            convertButton.setEnabled(true);
+            txtStatus.setText("Failed");
+            if (ex.getMessage().contains("Meta data is missing")) {
+                Alert.alert(MessageType.ERROR, "Meta data must be included in the zip package", AcmoUIWindow.this);
+            } else {
+                Alert.alert(MessageType.ERROR, ex.getMessage(), AcmoUIWindow.this);
+                throw ex;
+            }
+        }
+
     }
 
     private void toOutput(HashMap map) {
@@ -299,26 +310,30 @@ public class AcmoUIWindow extends Window implements Bindable {
                 convertButton.setEnabled(true);
                 LOG.info("=== Completed translation job ===");
                 final String file = arg0.getResult();
-                outputLink.setText(new File(file).getName());
-                outputLinkLsn = new ComponentMouseButtonListener() {
-                    @Override
-                    public boolean mouseDown(Component cmpnt, Mouse.Button button, int i, int i1) {
-                        return true;
-                    }
-                    @Override
-                    public boolean mouseUp(Component cmpnt, Mouse.Button button, int i, int i1) {
-                        return true;
-                    }
-                    @Override
-                    public boolean mouseClick(Component cmpnt, Mouse.Button button, int i, int i1, int i2) {
-                        try {
-                            Runtime.getRuntime().exec("cmd /c start \"\" \""+ file + "\"");
-                        } catch (IOException ex) {
+                if (!file.equals("")) {
+                    outputLink.setText(new File(file).getName());
+                    outputLinkLsn = new ComponentMouseButtonListener() {
+                        @Override
+                        public boolean mouseDown(Component cmpnt, Mouse.Button button, int i, int i1) {
+                            return true;
                         }
-                        return true;
-                    }
-                };
-                outputLink.getComponentMouseButtonListeners().add(outputLinkLsn);
+
+                        @Override
+                        public boolean mouseUp(Component cmpnt, Mouse.Button button, int i, int i1) {
+                            return true;
+                        }
+
+                        @Override
+                        public boolean mouseClick(Component cmpnt, Mouse.Button button, int i, int i1, int i2) {
+                            try {
+                                Runtime.getRuntime().exec("cmd /c start \"\" \"" + file + "\"");
+                            } catch (IOException ex) {
+                            }
+                            return true;
+                        }
+                    };
+                    outputLink.getComponentMouseButtonListeners().add(outputLinkLsn);
+                }
             }
         };
         task.execute(new TaskAdapter(listener));

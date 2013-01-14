@@ -36,7 +36,7 @@ public class TranslateToTask extends Task<String> {
         TranslatorOutput[] translators = new TranslatorOutput[translateList.size()];
         File output;
         try {
-            for (int i = 0; i< translateList.size(); i++) {
+            for (int i = 0; i < translateList.size(); i++) {
                 String tr = translateList.get(i);
                 if (tr.equals("DSSAT")) {
                     translators[i] = new AcmoDssatCsvOutput();
@@ -44,7 +44,7 @@ public class TranslateToTask extends Task<String> {
                     LOG.debug("Translating with :" + translators[i].getClass().getName());
                     Runnable thread = new TranslateRunner(translators[i], data, destination);
                     executor.execute(thread);
-                } else if (tr.equals("APSIM")){
+                } else if (tr.equals("APSIM")) {
                 } else {
                 }
             }
@@ -56,6 +56,11 @@ public class TranslateToTask extends Task<String> {
         } catch (Exception ex) {
             throw new TaskExecutionException(ex);
         }
-        return output.getAbsolutePath();
+        if (output != null) {
+            return output.getAbsolutePath();
+        } else {
+            return "";
+        }
+
     }
 }
