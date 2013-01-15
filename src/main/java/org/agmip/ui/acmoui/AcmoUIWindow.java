@@ -304,13 +304,12 @@ public class AcmoUIWindow extends Window implements Bindable {
 
             @Override
             public void taskExecuted(Task<String> arg0) {
-                txtStatus.setText("Completed");
-                Alert.alert(MessageType.INFO, "Translation completed", AcmoUIWindow.this);
                 convertIndicator.setActive(false);
                 convertButton.setEnabled(true);
-                LOG.info("=== Completed translation job ===");
                 final String file = arg0.getResult();
                 if (!file.equals("")) {
+                    txtStatus.setText("Completed");
+                    Alert.alert(MessageType.INFO, "Translation completed", AcmoUIWindow.this);
                     outputLink.setText(new File(file).getName());
                     outputLinkLsn = new ComponentMouseButtonListener() {
                         @Override
@@ -333,7 +332,12 @@ public class AcmoUIWindow extends Window implements Bindable {
                         }
                     };
                     outputLink.getComponentMouseButtonListeners().add(outputLinkLsn);
+                } else {
+                    txtStatus.setText("Cancelled");
+                    Alert.alert(MessageType.ERROR, "No file has been generated, please check the input file", AcmoUIWindow.this);
+                    LOG.info("No file has been generated.");
                 }
+                LOG.info("=== Cancelled translation job ===");
             }
         };
         task.execute(new TaskAdapter(listener));
