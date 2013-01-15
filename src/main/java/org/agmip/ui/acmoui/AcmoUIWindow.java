@@ -101,7 +101,7 @@ public class AcmoUIWindow extends Window implements Bindable {
         File convertFile = new File(convertText.getText());
         File outputDir = new File(outputText.getText());
         if (!convertFile.exists()) {
-            errors.add("You need to select a file to convert");
+            errors.add("You need to select a directory to convert");
         }
         if (!outputDir.exists() || !outputDir.isDirectory()) {
             errors.add("You need to select an output directory");
@@ -273,7 +273,7 @@ public class AcmoUIWindow extends Window implements Bindable {
             convertButton.setEnabled(true);
             txtStatus.setText("Failed");
             if (ex.getMessage().contains("Meta data is missing")) {
-                Alert.alert(MessageType.ERROR, "Meta data must be included in the zip package", AcmoUIWindow.this);
+                Alert.alert(MessageType.ERROR, "Meta data must be included in the selected directory", AcmoUIWindow.this);
             } else {
                 Alert.alert(MessageType.ERROR, ex.getMessage(), AcmoUIWindow.this);
                 throw ex;

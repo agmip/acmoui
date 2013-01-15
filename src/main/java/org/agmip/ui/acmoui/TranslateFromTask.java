@@ -55,7 +55,7 @@ public class TranslateFromTask extends Task<HashMap> {
         if (metaDataFlg) {
             translator = new AcmoDssatOutputFileInput();
         } else {
-            LOG.error("{} must be included in the zip package", metaFileName);
+            LOG.error("{} must be in the selected directory", metaFileName);
             throw new Exception("Meta data is missing");
         }
     }
