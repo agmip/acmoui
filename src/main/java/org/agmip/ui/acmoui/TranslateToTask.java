@@ -40,7 +40,7 @@ public class TranslateToTask extends Task<String> {
                 String tr = translateList.get(i);
                 if (tr.equals("DSSAT")) {
                     translators[i] = new AcmoDssatCsvOutput();
-                    String destination = destDirectory + File.separator + tr;
+                    String destination = destDirectory; //+ File.separator + tr;
                     LOG.debug("Translating with :" + translators[i].getClass().getName());
                     Runnable thread = new TranslateRunner(translators[i], data, destination);
                     executor.execute(thread);
