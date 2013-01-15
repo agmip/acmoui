@@ -27,13 +27,11 @@ import org.apache.pivot.wtk.ButtonPressListener;
 import org.apache.pivot.wtk.ButtonStateListener;
 import org.apache.pivot.wtk.Checkbox;
 import org.apache.pivot.wtk.Component;
-import org.apache.pivot.wtk.ComponentMouseButtonListener;
 import org.apache.pivot.wtk.DesktopApplicationContext;
 import org.apache.pivot.wtk.FileBrowserSheet;
 import org.apache.pivot.wtk.Label;
 import org.apache.pivot.wtk.LinkButton;
 import org.apache.pivot.wtk.MessageType;
-import org.apache.pivot.wtk.Mouse;
 import org.apache.pivot.wtk.Orientation;
 import org.apache.pivot.wtk.PushButton;
 import org.apache.pivot.wtk.Sheet;
@@ -41,6 +39,7 @@ import org.apache.pivot.wtk.SheetCloseListener;
 import org.apache.pivot.wtk.TaskAdapter;
 import org.apache.pivot.wtk.TextInput;
 import org.apache.pivot.wtk.Window;
+import org.apache.pivot.wtk.content.ButtonData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,13 +58,12 @@ public class AcmoUIWindow extends Window implements Bindable {
     private TextInput outputText = null;
     private TextInput convertText = null;
     private LinkButton outputLB = null;
-    private Label outputLink = null;
     private ArrayList<Checkbox> checkboxGroup = new ArrayList();
     private ArrayList<String> errors = new ArrayList();
     private Properties versionProperties = new Properties();
     private String acmoVersion = "";
     private Preferences pref = Preferences.userNodeForPackage(getClass());
-    private ComponentMouseButtonListener outputLinkLsn = null;
+    private ButtonPressListener outputLinkLsn = null;
 
     public AcmoUIWindow() {
         try {
@@ -124,7 +122,6 @@ public class AcmoUIWindow extends Window implements Bindable {
         modelApsim = (Checkbox) ns.get("model-apsim");
         modelDssat = (Checkbox) ns.get("model-dssat");
         outputLB = (LinkButton) ns.get("outputLB");
-        outputLink = (Label) ns.get("outputLBText");
 
         checkboxGroup.add(modelApsim);
         checkboxGroup.add(modelDssat);
@@ -245,9 +242,9 @@ public class AcmoUIWindow extends Window implements Bindable {
         convertIndicator.setActive(true);
         convertButton.setEnabled(false);
         txtStatus.setText("Importing data...");
-        outputLink.setText("");
+        outputLB.setVisible(false);
         if (outputLinkLsn != null) {
-            outputLink.getComponentMouseButtonListeners().remove(outputLinkLsn);
+            outputLB.getButtonPressListeners().remove(outputLinkLsn);
         }
         TaskListener<HashMap> listener = new TaskListener<HashMap>() {
             @Override
@@ -313,28 +310,20 @@ public class AcmoUIWindow extends Window implements Bindable {
                 if (!file.equals("")) {
                     txtStatus.setText("Completed");
                     Alert.alert(MessageType.INFO, "Translation completed", AcmoUIWindow.this);
-                    outputLink.setText(new File(file).getName());
-                    outputLinkLsn = new ComponentMouseButtonListener() {
+                    outputLB.setVisible(true);
+                    outputLB.setButtonData(new ButtonData(new File(file).getName()));
+                    outputLinkLsn = new ButtonPressListener() {
                         @Override
-                        public boolean mouseDown(Component cmpnt, Mouse.Button button, int i, int i1) {
-                            return true;
-                        }
-
-                        @Override
-                        public boolean mouseUp(Component cmpnt, Mouse.Button button, int i, int i1) {
-                            return true;
-                        }
-
-                        @Override
-                        public boolean mouseClick(Component cmpnt, Mouse.Button button, int i, int i1, int i2) {
+                        public void buttonPressed(Button button) {
                             try {
                                 Runtime.getRuntime().exec("cmd /c start \"\" \"" + file + "\"");
                             } catch (IOException ex) {
+                                Alert.alert(MessageType.ERROR, "Can not find the file", AcmoUIWindow.this);
+                                LOG.error(getStackTrace(ex));
                             }
-                            return true;
                         }
                     };
-                    outputLink.getComponentMouseButtonListeners().add(outputLinkLsn);
+                    outputLB.getButtonPressListeners().add(outputLinkLsn);
                 } else {
                     txtStatus.setText("Cancelled");
                     Alert.alert(MessageType.ERROR, "No file has been generated, please check the input file", AcmoUIWindow.this);
