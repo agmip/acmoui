@@ -101,10 +101,7 @@
                             <Label text="Output:" styles="{font:{bold:true}}" />
                             <Label text=" (Click file name to open)" />
                         </BoxPane>
-                        <BoxPane orientation="horizontal" styles="{padding:6}">
-                            <LinkButton bxml:id="outputLB" visible="false" buttonData="" />
-                            <Label bxml:id="outputLBText" text="" />
-                        </BoxPane>
+                        <LinkButton bxml:id="outputLB" visible="false" buttonData="" />
                     </BoxPane>
                 </BoxPane>
             </Border>
