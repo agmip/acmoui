@@ -34,7 +34,7 @@
             <Border styles="{padding:2, color: '#777777'}">
                 <BoxPane orientation="vertical" styles="{padding:{bottom:16, left: 6}}">
                     <BoxPane orientation="vertical" styles="{padding: 6}">
-                        <Label text="Model Output Data To Convert:" styles="{font:{bold:true}}" />
+                        <Label text="Model Output Data Directory:" styles="{font:{bold:true}}" />
                         <BoxPane orientation="horizontal"><TextInput bxml:id="convertText" editable="false"/><PushButton bxml:id="browseConvertButton" buttonData="Browse"/></BoxPane>
                     </BoxPane>
 <!--

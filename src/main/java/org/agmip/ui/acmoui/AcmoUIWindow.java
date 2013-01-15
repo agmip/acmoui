@@ -159,14 +159,19 @@ public class AcmoUIWindow extends Window implements Bindable {
                 final FileBrowserSheet browse;
                 if (convertText.getText().equals("")) {
                     String lastPath = pref.get("last_Input", "");
-                    if (lastPath.equals("") || !new File(lastPath).exists()) {
-                        browse = new FileBrowserSheet(FileBrowserSheet.Mode.OPEN);
+                    File tmp = new File(lastPath);
+                    if (lastPath.equals("") || !tmp.exists()) {
+                        browse = new FileBrowserSheet(FileBrowserSheet.Mode.SAVE_TO);
                     } else {
-                        browse = new FileBrowserSheet(FileBrowserSheet.Mode.OPEN, lastPath);
+                        if (!tmp.isDirectory()) {
+                            lastPath = tmp.getParentFile().getPath();
+                        }
+                        File f = new File(lastPath);
+                        browse = new FileBrowserSheet(FileBrowserSheet.Mode.SAVE_TO, f.getParent());
                     }
                 } else {
                     File f = new File(convertText.getText());
-                    browse = new FileBrowserSheet(FileBrowserSheet.Mode.OPEN, f.getParent());
+                    browse = new FileBrowserSheet(FileBrowserSheet.Mode.SAVE_TO, f.getParent());
                 }
                 browse.setDisabledFileFilter(new Filter<File>() {
                     @Override
@@ -184,14 +189,10 @@ public class AcmoUIWindow extends Window implements Bindable {
                         if (sheet.getResult()) {
                             File convertFile = browse.getSelectedFile();
                             convertText.setText(convertFile.getPath());
-                            try {
-                                String lastPath = convertFile.getCanonicalFile().getParent();
 //                            if (outputText.getText().equals("")) {
-                                if (outputCB.getState().equals(State.SELECTED)) {
-                                    outputText.setText(lastPath);
-                                }
-                                pref.put("last_Input", lastPath);
-                            } catch (IOException ex) {
+                            if (outputCB.getState().equals(State.SELECTED)) {
+                                outputText.setText(convertFile.getPath());
+                                pref.put("last_Input", convertFile.getPath());
                             }
                         }
                     }
@@ -208,10 +209,12 @@ public class AcmoUIWindow extends Window implements Bindable {
                     if (lastPath.equals("") || new File(lastPath).exists()) {
                         browse = new FileBrowserSheet(FileBrowserSheet.Mode.SAVE_TO);
                     } else {
-                        browse = new FileBrowserSheet(FileBrowserSheet.Mode.SAVE_TO, lastPath);
+                        File f = new File(lastPath);
+                        browse = new FileBrowserSheet(FileBrowserSheet.Mode.SAVE_TO, f.getParent());
                     }
                 } else {
-                    browse = new FileBrowserSheet(FileBrowserSheet.Mode.SAVE_TO, outputText.getText());
+                    File f = new File(outputText.getText());
+                    browse = new FileBrowserSheet(FileBrowserSheet.Mode.SAVE_TO, f.getParent());
                 }
                 browse.open(AcmoUIWindow.this, new SheetCloseListener() {
                     @Override
