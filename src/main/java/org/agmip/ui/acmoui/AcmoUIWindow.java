@@ -245,6 +245,7 @@ public class AcmoUIWindow extends Window implements Bindable {
         outputLB.setVisible(false);
         if (outputLinkLsn != null) {
             outputLB.getButtonPressListeners().remove(outputLinkLsn);
+            outputLinkLsn = null;
         }
         TaskListener<HashMap> listener = new TaskListener<HashMap>() {
             @Override

@@ -18,21 +18,27 @@ public class TranslateFromTask extends Task<HashMap> {
     private String file;
     private TranslatorInput translator;
     private String metaFileName = "ACMO_META.DAT";
+    private String dssatSummaryFileName = "SUMMARY.OUT";
 
     public TranslateFromTask(String file) throws Exception {
         this.file = file;
         boolean metaDataFlg = false;
+        boolean modelDataFlg = false;
         File dir = new File(file);
         
         // Pre-check if the meta data file is exist
         if (dir.isDirectory()) {
-            String[] files = dir.list();
-            for (int i = 0; i < files.length; i++) {
-                if (files[i].toUpperCase().equals(metaFileName)) {
-                    metaDataFlg = true;
-                    break;
-                }
-            }
+            File meta = new File(dir + File.separator + metaFileName);
+            File summary = new File(dir + File.separator + dssatSummaryFileName);
+            metaDataFlg = meta.exists();
+            modelDataFlg = summary.exists();
+            
+//            if (!modelDataFlg) {
+//                Process p = Runtime.getRuntime().exec("cmd /c cd " + dir + " && start C:\\dssat45\\dscsm045 b dssbatch.v45");
+//                p.waitFor();
+//                summary = new File(dir + File.separator + dssatSummaryFileName);
+//                modelDataFlg = summary.exists();
+//            }
         } else if (file.toLowerCase().endsWith(".zip")) {
             FileInputStream f = new FileInputStream(file);
             ZipInputStream z = new ZipInputStream(new BufferedInputStream(f));
@@ -41,7 +47,8 @@ public class TranslateFromTask extends Task<HashMap> {
             while ((ze = z.getNextEntry()) != null) {
                 if (ze.getName().toUpperCase().equals(metaFileName)) {
                     metaDataFlg = true;
-                    break;
+                } else if (ze.getName().toUpperCase().equals(dssatSummaryFileName)) {
+                    modelDataFlg = true;
                 }
             }
             z.close();
@@ -52,11 +59,17 @@ public class TranslateFromTask extends Task<HashMap> {
         }
 
         // Error report if necessary
-        if (metaDataFlg) {
+        if (metaDataFlg && modelDataFlg) {
             translator = new AcmoDssatOutputFileInput();
         } else {
-            LOG.error("{} must be in the selected directory", metaFileName);
-            throw new Exception("Meta data is missing");
+            if (!metaDataFlg) {
+                LOG.error("{} must be in the selected directory", metaFileName);
+                throw new Exception("Meta data is missing");
+            }
+            if (!modelDataFlg) {
+                LOG.error("{} must be in the selected directory", dssatSummaryFileName);
+                throw new Exception("Summary.out must be included in the selected directory");
+            }
         }
     }
 
