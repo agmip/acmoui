@@ -34,6 +34,7 @@ import org.apache.pivot.wtk.LinkButton;
 import org.apache.pivot.wtk.MessageType;
 import org.apache.pivot.wtk.Orientation;
 import org.apache.pivot.wtk.PushButton;
+import org.apache.pivot.wtk.RadioButton;
 import org.apache.pivot.wtk.Sheet;
 import org.apache.pivot.wtk.SheetCloseListener;
 import org.apache.pivot.wtk.TaskAdapter;
@@ -51,19 +52,20 @@ public class AcmoUIWindow extends Window implements Bindable {
     private PushButton browseToConvert = null;
     private PushButton browseOutputDir = null;
     private Checkbox outputCB = null;
-    private Checkbox modelApsim = null;
-    private Checkbox modelDssat = null;
+    private RadioButton modelApsim = null;
+    private RadioButton modelDssat = null;
     private Label txtStatus = null;
     private Label txtVersion = null;
     private TextInput outputText = null;
     private TextInput convertText = null;
     private LinkButton outputLB = null;
-    private ArrayList<Checkbox> checkboxGroup = new ArrayList();
+    private ArrayList<RadioButton> radioBtnGroup = new ArrayList();
     private ArrayList<String> errors = new ArrayList();
     private Properties versionProperties = new Properties();
     private String acmoVersion = "";
     private Preferences pref = Preferences.userNodeForPackage(getClass());
     private ButtonPressListener outputLinkLsn = null;
+    private String model = "";
 
     public AcmoUIWindow() {
         try {
@@ -90,7 +92,7 @@ public class AcmoUIWindow extends Window implements Bindable {
     private void validateInputs() {
         errors = new ArrayList();
         boolean anyModelChecked = false;
-        for (Checkbox cbox : checkboxGroup) {
+        for (RadioButton cbox : radioBtnGroup) {
             if (cbox.isSelected()) {
                 anyModelChecked = true;
             }
@@ -119,12 +121,12 @@ public class AcmoUIWindow extends Window implements Bindable {
         convertText = (TextInput) ns.get("convertText");
         outputText = (TextInput) ns.get("outputText");
         outputCB = (Checkbox) ns.get("outputCB");
-        modelApsim = (Checkbox) ns.get("model-apsim");
-        modelDssat = (Checkbox) ns.get("model-dssat");
+        modelApsim = (RadioButton) ns.get("model-apsim");
+        modelDssat = (RadioButton) ns.get("model-dssat");
         outputLB = (LinkButton) ns.get("outputLB");
 
-        checkboxGroup.add(modelApsim);
-        checkboxGroup.add(modelDssat);
+        radioBtnGroup.add(modelApsim);
+        radioBtnGroup.add(modelDssat);
 
         outputText.setText("");
         txtVersion.setText(acmoVersion);
@@ -239,6 +241,13 @@ public class AcmoUIWindow extends Window implements Bindable {
     }
 
     private void startTranslation() throws Exception {
+
+        if (modelApsim.isSelected()) {
+            model = "APSIM";
+        } else if (modelDssat.isSelected()) {
+            model = "DSSAT";
+        }
+
         convertIndicator.setActive(true);
         convertButton.setEnabled(false);
         txtStatus.setText("Importing data...");
@@ -267,7 +276,7 @@ public class AcmoUIWindow extends Window implements Bindable {
             }
         };
         try {
-            TranslateFromTask task = new TranslateFromTask(convertText.getText());
+            TranslateFromTask task = new TranslateFromTask(model, convertText.getText());
             task.execute(new TaskAdapter(listener));
         } catch (Exception ex) {
             convertIndicator.setActive(false);
@@ -285,15 +294,7 @@ public class AcmoUIWindow extends Window implements Bindable {
 
     private void toOutput(HashMap map) {
         txtStatus.setText("Generating ACMO.CSV file...");
-        ArrayList<String> models = new ArrayList();
-        if (modelApsim.isSelected()) {
-            models.add("APSIM");
-        }
-        if (modelDssat.isSelected()) {
-            models.add("DSSAT");
-        }
-
-        TranslateToTask task = new TranslateToTask(models, map, outputText.getText());
+        TranslateToTask task = new TranslateToTask(model, map, outputText.getText());
         TaskListener<String> listener = new TaskListener<String>() {
             @Override
             public void executeFailed(Task<String> arg0) {

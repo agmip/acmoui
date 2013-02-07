@@ -20,19 +20,19 @@ public class TranslateFromTask extends Task<HashMap> {
     private String metaFileName = "ACMO_META.DAT";
     private String dssatSummaryFileName = "SUMMARY.OUT";
 
-    public TranslateFromTask(String file) throws Exception {
+    public TranslateFromTask(String translateType, String file) throws Exception {
         this.file = file;
         boolean metaDataFlg = false;
         boolean modelDataFlg = false;
         File dir = new File(file);
-        
+
         // Pre-check if the meta data file is exist
         if (dir.isDirectory()) {
             File meta = new File(dir + File.separator + metaFileName);
             File summary = new File(dir + File.separator + dssatSummaryFileName);
             metaDataFlg = meta.exists();
             modelDataFlg = summary.exists();
-            
+
 //            if (!modelDataFlg) {
 //                Process p = Runtime.getRuntime().exec("cmd /c cd " + dir + " && start C:\\dssat45\\dscsm045 b dssbatch.v45");
 //                p.waitFor();
@@ -43,7 +43,7 @@ public class TranslateFromTask extends Task<HashMap> {
             FileInputStream f = new FileInputStream(file);
             ZipInputStream z = new ZipInputStream(new BufferedInputStream(f));
             ZipEntry ze;
-            
+
             while ((ze = z.getNextEntry()) != null) {
                 if (ze.getName().toUpperCase().equals(metaFileName)) {
                     metaDataFlg = true;
@@ -60,7 +60,13 @@ public class TranslateFromTask extends Task<HashMap> {
 
         // Error report if necessary
         if (metaDataFlg && modelDataFlg) {
-            translator = new AcmoDssatOutputFileInput();
+            if (translateType.equals("DSSAT")) {
+                translator = new AcmoDssatOutputFileInput();
+            } else if (translateType.equals("APSIM")) {
+                translator = null;
+            } else {
+                translator = null;
+            }
         } else {
             if (!metaDataFlg) {
                 LOG.error("{} must be in the selected directory", metaFileName);
@@ -76,6 +82,9 @@ public class TranslateFromTask extends Task<HashMap> {
     @Override
     public HashMap<String, Object> execute() {
         HashMap<String, Object> output = new HashMap();
+        if (translator == null) {
+            return output;
+        }
         try {
             output = (HashMap<String, Object>) translator.readFile(file);
             LOG.debug("Translate From Results: {}", output.toString());
