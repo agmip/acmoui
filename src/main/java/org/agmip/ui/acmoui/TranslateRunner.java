@@ -1,22 +1,20 @@
 package org.agmip.ui.acmoui;
 
-import java.io.IOException;
-import java.util.HashMap;
-
+import org.agmip.acmo.translators.AcmoTranslator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.agmip.core.types.TranslatorOutput;
 
 
 public class TranslateRunner implements Runnable {
-	private TranslatorOutput translator;
-	private HashMap data;
+	private AcmoTranslator translator;
+	private String inputDirectory;
 	private String outputDirectory;
 	private static Logger LOG = LoggerFactory.getLogger(TranslateRunner.class);
 	
-	public TranslateRunner(TranslatorOutput translator, HashMap data, String outputDirectory) {
+	public TranslateRunner(AcmoTranslator translator, String inputDirectory, 
+			String outputDirectory) {
 		this.translator = translator;
-		this.data = data;
+		this.inputDirectory = inputDirectory;
 		this.outputDirectory = outputDirectory;
 	}
 	
@@ -24,11 +22,10 @@ public class TranslateRunner implements Runnable {
 	@Override
 	public void run() {
 		LOG.debug("Starting new thread!");
-		try {
-			translator.writeFile(outputDirectory, data);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		boolean success = translator.execute(inputDirectory, outputDirectory);
+		if (!success) {
+			// TODO: Something to relate to the user something bad has happened.
 		}
+		
 	}
 }

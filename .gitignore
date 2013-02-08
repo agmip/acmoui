@@ -11,3 +11,4 @@ target/*
 .DS_Store
 *.log
 src/main/resources/git.properties
+/target

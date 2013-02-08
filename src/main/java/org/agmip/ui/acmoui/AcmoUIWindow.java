@@ -257,91 +257,111 @@ public class AcmoUIWindow extends Window implements Bindable {
             outputLB.getButtonPressListeners().remove(outputLinkLsn);
             outputLinkLsn = null;
         }
-        TaskListener<HashMap> listener = new TaskListener<HashMap>() {
-            @Override
-            public void taskExecuted(Task<HashMap> t) {
-                HashMap data = t.getResult();
-                if (!data.containsKey("errors")) {
-                    toOutput(data);
-                } else {
-                    Alert.alert(MessageType.ERROR, (String) data.get("errors"), AcmoUIWindow.this);
-                }
-            }
-
-            @Override
-            public void executeFailed(Task<HashMap> arg0) {
-                Alert.alert(MessageType.ERROR, arg0.getFault().getMessage(), AcmoUIWindow.this);
-                LOG.error(getStackTrace(arg0.getFault()));
-                convertIndicator.setActive(false);
+        TaskListener<Boolean> listener = new TaskListener<Boolean>() {
+        	@Override
+        	public void taskExecuted(Task<Boolean> t) {
+        		Boolean success = t.getResult();
+        		if(!success) {
+        			Alert.alert(MessageType.ERROR, "Unable to output ACMO file", AcmoUIWindow.this);
+        		} else {
+        			Alert.alert(MessageType.INFO, "Translation completed", AcmoUIWindow.this);
+        		}
+        		convertIndicator.setActive(false);
                 convertButton.setEnabled(true);
-            }
+        	}
+        	
+        	@Override
+        	public void executeFailed(Task<Boolean> fault) {
+        		Alert.alert(MessageType.ERROR, fault.getFault().getMessage(), AcmoUIWindow.this);
+        		convertIndicator.setActive(false);
+        		convertButton.setEnabled(true);
+        	}
         };
-        try {
-            TranslateFromTask task = new TranslateFromTask(model, convertText.getText());
-            task.execute(new TaskAdapter(listener));
-        } catch (Exception ex) {
-            convertIndicator.setActive(false);
-            convertButton.setEnabled(true);
-            txtStatus.setText("Failed");
-            if (ex.getMessage().contains("Meta data is missing")) {
-                Alert.alert(MessageType.ERROR, "Meta data must be included in the selected directory", AcmoUIWindow.this);
-            } else {
-                Alert.alert(MessageType.ERROR, ex.getMessage(), AcmoUIWindow.this);
-                throw ex;
-            }
-        }
-
-    }
-
-    private void toOutput(HashMap map) {
-        txtStatus.setText("Generating ACMO.CSV file...");
-        TranslateToTask task = new TranslateToTask(model, map, outputText.getText());
-        TaskListener<String> listener = new TaskListener<String>() {
-            @Override
-            public void executeFailed(Task<String> arg0) {
-                Alert.alert(MessageType.ERROR, arg0.getFault().getMessage(), AcmoUIWindow.this);
-                LOG.error(getStackTrace(arg0.getFault()));
-                convertIndicator.setActive(false);
-                convertButton.setEnabled(true);
-            }
-
-            @Override
-            public void taskExecuted(Task<String> arg0) {
-                convertIndicator.setActive(false);
-                convertButton.setEnabled(true);
-                final String file = arg0.getResult();
-                if (!file.equals("")) {
-                    txtStatus.setText("Completed");
-                    Alert.alert(MessageType.INFO, "Translation completed", AcmoUIWindow.this);
-                    outputLB.setVisible(true);
-                    outputLB.setButtonData(new ButtonData(new File(file).getName()));
-                    outputLinkLsn = new ButtonPressListener() {
-                        @Override
-                        public void buttonPressed(Button button) {
-                            try {
-                                ProcessBuilder pb = new ProcessBuilder("cmd", "/c", "start", "\"\"", file);
-                                pb.start();
-                            } catch (IOException ex) {
-                                try {
-                                    ProcessBuilder pb = new ProcessBuilder("open", file);
-                                    pb.start();
-                                } catch (IOException ex1) {
-                                    Alert.alert(MessageType.ERROR, "Your OS can not open the file by using this link", AcmoUIWindow.this);
-                                    LOG.error(getStackTrace(ex));
-                                }
-                            }
-                        }
-                    };
-                    outputLB.getButtonPressListeners().add(outputLinkLsn);
-                } else {
-                    txtStatus.setText("Cancelled");
-                    Alert.alert(MessageType.ERROR, "No file has been generated, please check the input file", AcmoUIWindow.this);
-                    LOG.info("No file has been generated.");
-                }
-                LOG.info("=== Cancelled translation job ===");
-            }
-        };
-        task.execute(new TaskAdapter(listener));
+//        TaskListener<HashMap> listener = new TaskListener<HashMap>() {
+//            @Override
+//            public void taskExecuted(Task<HashMap> t) {
+//                HashMap data = t.getResult();
+//                if (!data.containsKey("errors")) {
+//                    toOutput(data);
+//                } else {
+//                    Alert.alert(MessageType.ERROR, (String) data.get("errors"), AcmoUIWindow.this);
+//                }
+//            }
+//
+//            @Override
+//            public void executeFailed(Task<HashMap> arg0) {
+//                Alert.alert(MessageType.ERROR, arg0.getFault().getMessage(), AcmoUIWindow.this);
+//                LOG.error(getStackTrace(arg0.getFault()));
+//                convertIndicator.setActive(false);
+//                convertButton.setEnabled(true);
+//            }
+//        };
+//        try {
+//            TranslateFromTask task = new TranslateFromTask(model, convertText.getText());
+//            task.execute(new TaskAdapter(listener));
+//        } catch (Exception ex) {
+//            convertIndicator.setActive(false);
+//            convertButton.setEnabled(true);
+//            txtStatus.setText("Failed");
+//            if (ex.getMessage().contains("Meta data is missing")) {
+//                Alert.alert(MessageType.ERROR, "Meta data must be included in the selected directory", AcmoUIWindow.this);
+//            } else {
+//                Alert.alert(MessageType.ERROR, ex.getMessage(), AcmoUIWindow.this);
+//                throw ex;
+//            }
+//        }
+//
+//    }
+//
+//    private void toOutput(HashMap map) {
+//        txtStatus.setText("Generating ACMO.CSV file...");
+//        TranslateToTask task = new TranslateToTask(model, map, outputText.getText());
+//        TaskListener<String> listener = new TaskListener<String>() {
+//            @Override
+//            public void executeFailed(Task<String> arg0) {
+//                Alert.alert(MessageType.ERROR, arg0.getFault().getMessage(), AcmoUIWindow.this);
+//                LOG.error(getStackTrace(arg0.getFault()));
+//                convertIndicator.setActive(false);
+//                convertButton.setEnabled(true);
+//            }
+//
+//            @Override
+//            public void taskExecuted(Task<String> arg0) {
+//                convertIndicator.setActive(false);
+//                convertButton.setEnabled(true);
+//                final String file = arg0.getResult();
+//                if (!file.equals("")) {
+//                    txtStatus.setText("Completed");
+//                    Alert.alert(MessageType.INFO, "Translation completed", AcmoUIWindow.this);
+//                    outputLB.setVisible(true);
+//                    outputLB.setButtonData(new ButtonData(new File(file).getName()));
+//                    outputLinkLsn = new ButtonPressListener() {
+//                        @Override
+//                        public void buttonPressed(Button button) {
+//                            try {
+//                                ProcessBuilder pb = new ProcessBuilder("cmd", "/c", "start", "\"\"", file);
+//                                pb.start();
+//                            } catch (IOException ex) {
+//                                try {
+//                                    ProcessBuilder pb = new ProcessBuilder("open", file);
+//                                    pb.start();
+//                                } catch (IOException ex1) {
+//                                    Alert.alert(MessageType.ERROR, "Your OS can not open the file by using this link", AcmoUIWindow.this);
+//                                    LOG.error(getStackTrace(ex));
+//                                }
+//                            }
+//                        }
+//                    };
+//                    outputLB.getButtonPressListeners().add(outputLinkLsn);
+//                } else {
+//                    txtStatus.setText("Cancelled");
+//                    Alert.alert(MessageType.ERROR, "No file has been generated, please check the input file", AcmoUIWindow.this);
+//                    LOG.info("No file has been generated.");
+//                }
+//                LOG.info("=== Cancelled translation job ===");
+//            }
+//        };
+//        task.execute(new TaskAdapter(listener));
     }
 
     private static String getStackTrace(Throwable aThrowable) {
