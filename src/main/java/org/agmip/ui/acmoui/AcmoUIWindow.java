@@ -10,6 +10,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.logging.Level;
 import java.util.prefs.Preferences;
 import org.apache.pivot.beans.Bindable;
 import org.apache.pivot.collections.Map;
@@ -318,10 +319,16 @@ public class AcmoUIWindow extends Window implements Bindable {
                         @Override
                         public void buttonPressed(Button button) {
                             try {
-                                Runtime.getRuntime().exec("cmd /c start \"\" \"" + file + "\"");
+                                ProcessBuilder pb = new ProcessBuilder("cmd", "/c", "start", "\"\"", file);
+                                pb.start();
                             } catch (IOException ex) {
-                                Alert.alert(MessageType.ERROR, "Can not find the file", AcmoUIWindow.this);
-                                LOG.error(getStackTrace(ex));
+                                try {
+                                    ProcessBuilder pb = new ProcessBuilder("open", file);
+                                    pb.start();
+                                } catch (IOException ex1) {
+                                    Alert.alert(MessageType.ERROR, "Your OS can not open the file by using this link", AcmoUIWindow.this);
+                                    LOG.error(getStackTrace(ex));
+                                }
                             }
                         }
                     };
