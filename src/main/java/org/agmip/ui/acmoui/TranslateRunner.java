@@ -1,5 +1,6 @@
 package org.agmip.ui.acmoui;
 
+import java.io.File;
 import org.agmip.acmo.translators.AcmoTranslator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,8 +23,8 @@ public class TranslateRunner implements Runnable {
 	@Override
 	public void run() {
 		LOG.debug("Starting new thread!");
-		boolean success = translator.execute(inputDirectory, outputDirectory);
-		if (!success) {
+		File ret = translator.execute(inputDirectory, outputDirectory);
+		if (ret != null && ret.exists()) {
 			// TODO: Something to relate to the user something bad has happened.
 		}
 		
