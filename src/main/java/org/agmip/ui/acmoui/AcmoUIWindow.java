@@ -8,21 +8,23 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Properties;
 import java.util.prefs.Preferences;
+import org.agmip.acmo.translators.AcmoTranslator;
+import org.agmip.acmo.translators.apsim.ApsimAcmo;
+import org.agmip.acmo.translators.dssat.DssatAcmo;
 import org.apache.pivot.beans.Bindable;
 import org.apache.pivot.collections.Map;
 import org.apache.pivot.util.Filter;
 import org.apache.pivot.util.Resources;
-import org.apache.pivot.util.concurrent.Task;
-import org.apache.pivot.util.concurrent.TaskListener;
 import org.apache.pivot.wtk.Action;
 import org.apache.pivot.wtk.ActivityIndicator;
 import org.apache.pivot.wtk.Alert;
 import org.apache.pivot.wtk.BoxPane;
 import org.apache.pivot.wtk.Button;
 import org.apache.pivot.wtk.Button.State;
+import org.apache.pivot.wtk.ButtonGroup;
+import org.apache.pivot.wtk.ButtonGroupListener;
 import org.apache.pivot.wtk.ButtonPressListener;
 import org.apache.pivot.wtk.ButtonStateListener;
 import org.apache.pivot.wtk.Checkbox;
@@ -34,9 +36,9 @@ import org.apache.pivot.wtk.LinkButton;
 import org.apache.pivot.wtk.MessageType;
 import org.apache.pivot.wtk.Orientation;
 import org.apache.pivot.wtk.PushButton;
+import org.apache.pivot.wtk.RadioButton;
 import org.apache.pivot.wtk.Sheet;
 import org.apache.pivot.wtk.SheetCloseListener;
-import org.apache.pivot.wtk.TaskAdapter;
 import org.apache.pivot.wtk.TextInput;
 import org.apache.pivot.wtk.Window;
 import org.apache.pivot.wtk.content.ButtonData;
@@ -51,29 +53,37 @@ public class AcmoUIWindow extends Window implements Bindable {
     private PushButton browseToConvert = null;
     private PushButton browseOutputDir = null;
     private Checkbox outputCB = null;
-    private Checkbox modelApsim = null;
-    private Checkbox modelDssat = null;
+    private ButtonGroup modelBtnGrp = null;
+    private RadioButton modelApsim = null;
+    private RadioButton modelDssat = null;
+    private Boolean FirstSelect = true;
     private Label txtStatus = null;
     private Label txtVersion = null;
     private TextInput outputText = null;
     private TextInput convertText = null;
     private LinkButton outputLB = null;
-    private ArrayList<Checkbox> checkboxGroup = new ArrayList();
+//    private ArrayList<RadioButton> radioBtnGroup = new ArrayList();
     private ArrayList<String> errors = new ArrayList();
     private Properties versionProperties = new Properties();
     private String acmoVersion = "";
     private Preferences pref = Preferences.userNodeForPackage(getClass());
     private ButtonPressListener outputLinkLsn = null;
+    private String model = "";
 
     public AcmoUIWindow() {
         try {
-            InputStream versionFile = getClass().getClassLoader().getResourceAsStream("git.properties");
+            InputStream versionFile = getClass().getClassLoader().getResourceAsStream("product.properties");
             versionProperties.load(versionFile);
             versionFile.close();
             StringBuilder qv = new StringBuilder();
+            String buildType = versionProperties.getProperty("product.buildtype").toString();
             qv.append("Version ");
-            qv.append(versionProperties.getProperty("git.commit.id.describe").toString());
-            qv.append("(").append(versionProperties.getProperty("git.branch").toString()).append(")");
+            qv.append(versionProperties.getProperty("product.version").toString());
+            qv.append("-").append(versionProperties.getProperty("product.buildversion").toString());
+            qv.append("(").append(buildType).append(")");
+            if (buildType.equals("dev")) {
+                qv.append(" [").append(versionProperties.getProperty("product.buildts")).append("]");
+            }
             acmoVersion = qv.toString();
         } catch (IOException ex) {
             LOG.error("Unable to load version information, version will be blank.");
@@ -89,19 +99,29 @@ public class AcmoUIWindow extends Window implements Bindable {
 
     private void validateInputs() {
         errors = new ArrayList();
-        boolean anyModelChecked = false;
-        for (Checkbox cbox : checkboxGroup) {
-            if (cbox.isSelected()) {
-                anyModelChecked = true;
-            }
-        }
+        boolean anyModelChecked = modelBtnGrp.getSelection() != null;
+//        for (RadioButton cbox : radioBtnGroup) {
+//            if (cbox.isSelected()) {
+//                anyModelChecked = true;
+//                break;
+//            }
+//        }
         if (!anyModelChecked) {
             errors.add("You need to select an output data source");
         }
-        File convertFile = new File(convertText.getText());
+        File convertDir = new File(convertText.getText());
         File outputDir = new File(outputText.getText());
-        if (!convertFile.exists()) {
+        if (!convertDir.exists() || !convertDir.isDirectory()) {
             errors.add("You need to select a directory to convert");
+        } else if (convertDir.isDirectory()) {
+            try {
+                File meta = new File(convertDir.getCanonicalPath() + File.separator + "ACMO_meta.dat");
+                if (!meta.exists()) {
+                    errors.add("You need to inlucde meta data in the directory");
+                }
+            } catch (IOException e) {
+                errors.add("You need to select a valid directory to convert");
+            }
         }
         if (!outputDir.exists() || !outputDir.isDirectory()) {
             errors.add("You need to select an output directory");
@@ -119,15 +139,36 @@ public class AcmoUIWindow extends Window implements Bindable {
         convertText = (TextInput) ns.get("convertText");
         outputText = (TextInput) ns.get("outputText");
         outputCB = (Checkbox) ns.get("outputCB");
-        modelApsim = (Checkbox) ns.get("model-apsim");
-        modelDssat = (Checkbox) ns.get("model-dssat");
+        modelBtnGrp = (ButtonGroup) ns.get("models");
+        modelApsim = (RadioButton) ns.get("model-apsim");
+        modelDssat = (RadioButton) ns.get("model-dssat");
         outputLB = (LinkButton) ns.get("outputLB");
 
-        checkboxGroup.add(modelApsim);
-        checkboxGroup.add(modelDssat);
+//        radioBtnGroup.add(modelApsim);
+//        radioBtnGroup.add(modelDssat);
 
         outputText.setText("");
         txtVersion.setText(acmoVersion);
+        
+        modelBtnGrp.getButtonGroupListeners().add(new ButtonGroupListener() {
+            @Override
+            public void buttonAdded(ButtonGroup bg, Button button) {
+            }
+
+            @Override
+            public void buttonRemoved(ButtonGroup bg, Button button) {
+            }
+
+            @Override
+            public void selectionChanged(ButtonGroup bg, Button button) {
+                if (!FirstSelect) {
+                    convertText.setText("");
+                    outputText.setText("");
+                } else {
+                    FirstSelect = false;
+                }
+            }
+        });
 
         convertButton.getButtonPressListeners().add(new ButtonPressListener() {
             @Override
@@ -239,103 +280,159 @@ public class AcmoUIWindow extends Window implements Bindable {
     }
 
     private void startTranslation() throws Exception {
+
+        AcmoTranslator translator;
+        File output;
+        if (modelApsim.isSelected()) {
+            model = "APSIM";
+            translator = new ApsimAcmo();
+        } else if (modelDssat.isSelected()) {
+            model = "DSSAT";
+            translator = new DssatAcmo();
+        } else {
+            Alert.alert(MessageType.ERROR, "You need to select an output data source", AcmoUIWindow.this);
+            return;
+        }
+
         convertIndicator.setActive(true);
         convertButton.setEnabled(false);
-        txtStatus.setText("Importing data...");
+        txtStatus.setText("Generating ACMO_" + model + ".CSV file...");
         outputLB.setVisible(false);
         if (outputLinkLsn != null) {
             outputLB.getButtonPressListeners().remove(outputLinkLsn);
             outputLinkLsn = null;
         }
-        TaskListener<HashMap> listener = new TaskListener<HashMap>() {
-            @Override
-            public void taskExecuted(Task<HashMap> t) {
-                HashMap data = t.getResult();
-                if (!data.containsKey("errors")) {
-                    toOutput(data);
-                } else {
-                    Alert.alert(MessageType.ERROR, (String) data.get("errors"), AcmoUIWindow.this);
-                }
-            }
 
-            @Override
-            public void executeFailed(Task<HashMap> arg0) {
-                Alert.alert(MessageType.ERROR, arg0.getFault().getMessage(), AcmoUIWindow.this);
-                LOG.error(getStackTrace(arg0.getFault()));
-                convertIndicator.setActive(false);
-                convertButton.setEnabled(true);
-            }
-        };
         try {
-            TranslateFromTask task = new TranslateFromTask(convertText.getText());
-            task.execute(new TaskAdapter(listener));
-        } catch (Exception ex) {
-            convertIndicator.setActive(false);
-            convertButton.setEnabled(true);
-            txtStatus.setText("Failed");
-            if (ex.getMessage().contains("Meta data is missing")) {
-                Alert.alert(MessageType.ERROR, "Meta data must be included in the selected directory", AcmoUIWindow.this);
+            output = translator.execute(convertText.getText(), outputText.getText());
+            if (output == null && output.exists()) {
+                txtStatus.setText("Cancelled");
+                Alert.alert(MessageType.ERROR, "No file has been generated, please check the input file", AcmoUIWindow.this);
+                LOG.info("No file has been generated.");
+                LOG.info("=== Cancelled translation job ===");
             } else {
-                Alert.alert(MessageType.ERROR, ex.getMessage(), AcmoUIWindow.this);
-                throw ex;
-            }
-        }
-
-    }
-
-    private void toOutput(HashMap map) {
-        txtStatus.setText("Generating ACMO.CSV file...");
-        ArrayList<String> models = new ArrayList();
-        if (modelApsim.isSelected()) {
-            models.add("APSIM");
-        }
-        if (modelDssat.isSelected()) {
-            models.add("DSSAT");
-        }
-
-        TranslateToTask task = new TranslateToTask(models, map, outputText.getText());
-        TaskListener<String> listener = new TaskListener<String>() {
-            @Override
-            public void executeFailed(Task<String> arg0) {
-                Alert.alert(MessageType.ERROR, arg0.getFault().getMessage(), AcmoUIWindow.this);
-                LOG.error(getStackTrace(arg0.getFault()));
-                convertIndicator.setActive(false);
-                convertButton.setEnabled(true);
-            }
-
-            @Override
-            public void taskExecuted(Task<String> arg0) {
-                convertIndicator.setActive(false);
-                convertButton.setEnabled(true);
-                final String file = arg0.getResult();
-                if (!file.equals("")) {
-                    txtStatus.setText("Completed");
-                    Alert.alert(MessageType.INFO, "Translation completed", AcmoUIWindow.this);
-                    outputLB.setVisible(true);
-                    outputLB.setButtonData(new ButtonData(new File(file).getName()));
-                    outputLinkLsn = new ButtonPressListener() {
-                        @Override
-                        public void buttonPressed(Button button) {
+                final String file = output.getCanonicalPath();
+                txtStatus.setText("Completed");
+                Alert.alert(MessageType.INFO, "Translation completed", AcmoUIWindow.this);
+                outputLB.setVisible(true);
+                outputLB.setButtonData(new ButtonData(output.getName()));
+                outputLinkLsn = new ButtonPressListener() {
+                    @Override
+                    public void buttonPressed(Button button) {
+                        try {
+                            ProcessBuilder pb = new ProcessBuilder("cmd", "/c", "start", "\"\"", file);
+                            pb.start();
+                        } catch (IOException winEx) {
                             try {
-                                Runtime.getRuntime().exec("cmd /c start \"\" \"" + file + "\"");
-                            } catch (IOException ex) {
-                                Alert.alert(MessageType.ERROR, "Can not find the file", AcmoUIWindow.this);
-                                LOG.error(getStackTrace(ex));
+                                ProcessBuilder pb = new ProcessBuilder("open", file);
+                                pb.start();
+                            } catch (IOException macEx) {
+                                Alert.alert(MessageType.ERROR, "Your OS can not open the file by using this link", AcmoUIWindow.this);
+                                LOG.error(getStackTrace(winEx));
+                                LOG.error(getStackTrace(macEx));
                             }
                         }
-                    };
-                    outputLB.getButtonPressListeners().add(outputLinkLsn);
-                } else {
-                    txtStatus.setText("Cancelled");
-                    Alert.alert(MessageType.ERROR, "No file has been generated, please check the input file", AcmoUIWindow.this);
-                    LOG.info("No file has been generated.");
-                }
-                LOG.info("=== Cancelled translation job ===");
+                    }
+                };
+                outputLB.getButtonPressListeners().add(outputLinkLsn);
+                LOG.info("=== Completed translation job ===");
             }
-        };
-        task.execute(new TaskAdapter(listener));
+
+        } catch (Exception ex) {
+            txtStatus.setText("Failed");
+            LOG.error(getStackTrace(ex));
+            Alert.alert(MessageType.ERROR, ex.getMessage(), AcmoUIWindow.this);
+            LOG.info("=== Cancelled translation job ===");
+        }
+
+        convertIndicator.setActive(false);
+        convertButton.setEnabled(true);
+
+//        TaskListener<HashMap> listener = new TaskListener<HashMap>() {
+//            @Override
+//            public void taskExecuted(Task<HashMap> t) {
+//                HashMap data = t.getResult();
+//                if (!data.containsKey("errors")) {
+//                    toOutput(data);
+//                } else {
+//                    Alert.alert(MessageType.ERROR, (String) data.get("errors"), AcmoUIWindow.this);
+//                }
+//            }
+//
+//            @Override
+//            public void executeFailed(Task<HashMap> arg0) {
+//                Alert.alert(MessageType.ERROR, arg0.getFault().getMessage(), AcmoUIWindow.this);
+//                LOG.error(getStackTrace(arg0.getFault()));
+//                convertIndicator.setActive(false);
+//                convertButton.setEnabled(true);
+//            }
+//        };
+//        try {
+//            TranslateFromTask task = new TranslateFromTask(model, convertText.getText());
+//            task.execute(new TaskAdapter(listener));
+//        } catch (Exception ex) {
+//            convertIndicator.setActive(false);
+//            convertButton.setEnabled(true);
+//            txtStatus.setText("Failed");
+//            if (ex.getMessage().contains("Meta data is missing")) {
+//                Alert.alert(MessageType.ERROR, "Meta data must be included in the selected directory", AcmoUIWindow.this);
+//            } else {
+//                Alert.alert(MessageType.ERROR, ex.getMessage(), AcmoUIWindow.this);
+//                throw ex;
+//            }
+//        }
     }
 
+//    private void toOutput(HashMap map) {
+//        txtStatus.setText("Generating ACMO.CSV file...");
+//        TranslateToTask task = new TranslateToTask(model, map, outputText.getText());
+//        TaskListener<String> listener = new TaskListener<String>() {
+//            @Override
+//            public void executeFailed(Task<String> arg0) {
+//                Alert.alert(MessageType.ERROR, arg0.getFault().getMessage(), AcmoUIWindow.this);
+//                LOG.error(getStackTrace(arg0.getFault()));
+//                convertIndicator.setActive(false);
+//                convertButton.setEnabled(true);
+//            }
+//
+//            @Override
+//            public void taskExecuted(Task<String> arg0) {
+//                convertIndicator.setActive(false);
+//                convertButton.setEnabled(true);
+//                final String file = arg0.getResult();
+//                if (!file.equals("")) {
+//                    txtStatus.setText("Completed");
+//                    Alert.alert(MessageType.INFO, "Translation completed", AcmoUIWindow.this);
+//                    outputLB.setVisible(true);
+//                    outputLB.setButtonData(new ButtonData(new File(file).getName()));
+//                    outputLinkLsn = new ButtonPressListener() {
+//                        @Override
+//                        public void buttonPressed(Button button) {
+//                            try {
+//                                ProcessBuilder pb = new ProcessBuilder("cmd", "/c", "start", "\"\"", file);
+//                                pb.start();
+//                            } catch (IOException ex) {
+//                                try {
+//                                    ProcessBuilder pb = new ProcessBuilder("open", file);
+//                                    pb.start();
+//                                } catch (IOException ex1) {
+//                                    Alert.alert(MessageType.ERROR, "Your OS can not open the file by using this link", AcmoUIWindow.this);
+//                                    LOG.error(getStackTrace(ex));
+//                                }
+//                            }
+//                        }
+//                    };
+//                    outputLB.getButtonPressListeners().add(outputLinkLsn);
+//                } else {
+//                    txtStatus.setText("Cancelled");
+//                    Alert.alert(MessageType.ERROR, "No file has been generated, please check the input file", AcmoUIWindow.this);
+//                    LOG.info("No file has been generated.");
+//                }
+//                LOG.info("=== Cancelled translation job ===");
+//            }
+//        };
+//        task.execute(new TaskAdapter(listener));
+//    }
     private static String getStackTrace(Throwable aThrowable) {
         final Writer result = new StringWriter();
         final PrintWriter printWriter = new PrintWriter(result);

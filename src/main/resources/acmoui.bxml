@@ -33,6 +33,18 @@
         <TablePane.Row height="1*">
             <Border styles="{padding:2, color: '#777777'}">
                 <BoxPane orientation="vertical" styles="{padding:{bottom:16, left: 6}}">
+                    <BoxPane orientation="vertical" styles="{padding:6}">
+                        <!--<Label text="Data from:" styles="{font:{bold:true}}" />-->
+                        <Border title="Data from:" styles="{padding:6}">
+                            <BoxPane orientation="vertical">
+                                <bxml:define>
+                                    <ButtonGroup bxml:id="models"/>
+                                </bxml:define>
+                                <RadioButton bxml:id="model-dssat" buttonData="DSSAT" buttonGroup="$models"/>
+                                <RadioButton bxml:id="model-apsim" buttonData="APSIM" buttonGroup="$models"/>
+                            </BoxPane>
+                        </Border>
+                    </BoxPane>
                     <BoxPane orientation="vertical" styles="{padding: 6}">
                         <Label text="Model Output Data Directory:" styles="{font:{bold:true}}" />
                         <BoxPane orientation="horizontal">
@@ -71,20 +83,6 @@
                         <BoxPane orientation="horizontal">
                             <Checkbox bxml:id="outputCB" buttonData="Same with input Directory" state="selected"/>
                         </BoxPane>
-                    </BoxPane>
-                    <BoxPane orientation="vertical" styles="{padding:6}">
-                        <Border title="Data from:" styles="{padding:6}">
-                            <BoxPane orientation="vertical">
-                                <bxml:define>
-                                    <ButtonGroup bxml:id="models"/>
-                                </bxml:define>
-                                <Checkbox bxml:id="model-dssat" buttonData="DSSAT"/>
-                                <Checkbox bxml:id="model-apsim" buttonData="APSIM" enabled="false"/>
-                                <!--
-                                                                <Checkbox bxml:id="model-json"  buttonData="JSON" enabled="false"/>
-                                -->
-                            </BoxPane>
-                        </Border>
                     </BoxPane>
                     <BoxPane orientation="horizontal" styles="{padding:6}">
                         <PushButton bxml:id="convertButton" buttonData="Convert" styles="{padding:{left:16,right:16}}"/>
