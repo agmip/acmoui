@@ -72,13 +72,18 @@ public class AcmoUIWindow extends Window implements Bindable {
 
     public AcmoUIWindow() {
         try {
-            InputStream versionFile = getClass().getClassLoader().getResourceAsStream("git.properties");
+            InputStream versionFile = getClass().getClassLoader().getResourceAsStream("product.properties");
             versionProperties.load(versionFile);
             versionFile.close();
             StringBuilder qv = new StringBuilder();
+            String buildType = versionProperties.getProperty("product.buildtype").toString();
             qv.append("Version ");
-            qv.append(versionProperties.getProperty("git.commit.id.describe").toString());
-            qv.append("(").append(versionProperties.getProperty("git.branch").toString()).append(")");
+            qv.append(versionProperties.getProperty("product.version").toString());
+            qv.append("-").append(versionProperties.getProperty("product.buildversion").toString());
+            qv.append("(").append(buildType).append(")");
+            if (buildType.equals("dev")) {
+                qv.append(" [").append(versionProperties.getProperty("product.buildts")).append("]");
+            }
             acmoVersion = qv.toString();
         } catch (IOException ex) {
             LOG.error("Unable to load version information, version will be blank.");
