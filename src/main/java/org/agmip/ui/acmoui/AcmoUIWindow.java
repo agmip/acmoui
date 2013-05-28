@@ -12,6 +12,7 @@ import java.util.Properties;
 import java.util.prefs.Preferences;
 import org.agmip.acmo.translators.AcmoTranslator;
 import org.agmip.acmo.translators.apsim.ApsimAcmo;
+import org.agmip.acmo.translators.cropgrownau.CropGrowNAUAcmo;
 import org.agmip.acmo.translators.dssat.DssatAcmo;
 import org.apache.pivot.beans.Bindable;
 import org.apache.pivot.collections.Map;
@@ -56,6 +57,7 @@ public class AcmoUIWindow extends Window implements Bindable {
     private ButtonGroup modelBtnGrp = null;
     private RadioButton modelApsim = null;
     private RadioButton modelDssat = null;
+    private RadioButton modelCgnau = null;
     private Boolean FirstSelect = true;
     private Label txtStatus = null;
     private Label txtVersion = null;
@@ -142,6 +144,7 @@ public class AcmoUIWindow extends Window implements Bindable {
         modelBtnGrp = (ButtonGroup) ns.get("models");
         modelApsim = (RadioButton) ns.get("model-apsim");
         modelDssat = (RadioButton) ns.get("model-dssat");
+        modelCgnau = (RadioButton) ns.get("model-cgnau");
         outputLB = (LinkButton) ns.get("outputLB");
 
 //        radioBtnGroup.add(modelApsim);
@@ -289,6 +292,9 @@ public class AcmoUIWindow extends Window implements Bindable {
         } else if (modelDssat.isSelected()) {
             model = "DSSAT";
             translator = new DssatAcmo();
+        } else if (modelCgnau.isSelected()) {
+            model = "CropGrow-NAU";
+            translator = new CropGrowNAUAcmo();
         } else {
             Alert.alert(MessageType.ERROR, "You need to select an output data source", AcmoUIWindow.this);
             return;
