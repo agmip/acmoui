@@ -13,17 +13,12 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jdk.version>1.6</jdk.version>
-        <product.buildtype>release</product.buildtype>
-        <product.buildversion>final</product.buildversion>
+        <product.buildtype>dev</product.buildtype>
+        <product.buildversion>beta1</product.buildversion>
         <product.buildts>${maven.build.timestamp}</product.buildts>
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>org.agmip</groupId>
-            <artifactId>agmip-core</artifactId>
-            <version>1.1</version>
-        </dependency>
         <dependency>
             <groupId>org.apache.pivot</groupId>
             <artifactId>pivot-core</artifactId>
@@ -52,13 +47,13 @@
         </dependency>
         <dependency>
             <groupId>org.agmip</groupId>
-            <artifactId>ace-lookup</artifactId>
-            <version>1.1</version>
+            <artifactId>acmo</artifactId>
+            <version>1.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.agmip.translators.acmo</groupId>
             <artifactId>acmo-dssat</artifactId>
-            <version>1.0.1</version>
+            <version>1.0.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.agmip.translators.acmo</groupId>
