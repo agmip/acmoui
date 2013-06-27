@@ -14,6 +14,7 @@ import org.agmip.acmo.translators.AcmoTranslator;
 import org.agmip.acmo.translators.apsim.ApsimAcmo;
 import org.agmip.acmo.translators.cropgrownau.CropGrowNAUAcmo;
 import org.agmip.acmo.translators.dssat.DssatAcmo;
+import org.agmip.translators.wofost.WofostACMO;
 import org.apache.pivot.beans.Bindable;
 import org.apache.pivot.collections.Map;
 import org.apache.pivot.util.Filter;
@@ -57,6 +58,7 @@ public class AcmoUIWindow extends Window implements Bindable {
     private ButtonGroup modelBtnGrp = null;
     private RadioButton modelApsim = null;
     private RadioButton modelDssat = null;
+    private RadioButton modelWofost = null;
     private RadioButton modelCgnau = null;
     private Boolean FirstSelect = true;
     private Label txtStatus = null;
@@ -144,6 +146,7 @@ public class AcmoUIWindow extends Window implements Bindable {
         modelBtnGrp = (ButtonGroup) ns.get("models");
         modelApsim = (RadioButton) ns.get("model-apsim");
         modelDssat = (RadioButton) ns.get("model-dssat");
+        modelWofost = (RadioButton) ns.get("model-wofost");
         modelCgnau = (RadioButton) ns.get("model-cgnau");
         outputLB = (LinkButton) ns.get("outputLB");
 
@@ -292,6 +295,9 @@ public class AcmoUIWindow extends Window implements Bindable {
         } else if (modelDssat.isSelected()) {
             model = "DSSAT";
             translator = new DssatAcmo();
+        } else if (modelWofost.isSelected()) {
+            model = "WOFOST";
+            translator = new WofostACMO();
         } else if (modelCgnau.isSelected()) {
             model = "CropGrow-NAU";
             translator = new CropGrowNAUAcmo();
@@ -311,7 +317,7 @@ public class AcmoUIWindow extends Window implements Bindable {
 
         try {
             output = translator.execute(convertText.getText(), outputText.getText());
-            if (output == null && output.exists()) {
+            if (output == null || !output.exists()) {
                 txtStatus.setText("Cancelled");
                 Alert.alert(MessageType.ERROR, "No file has been generated, please check the input file", AcmoUIWindow.this);
                 LOG.info("No file has been generated.");
