@@ -155,6 +155,7 @@ public class AcmoUIWindow extends Window implements Bindable {
 
         outputText.setText("");
         txtVersion.setText(acmoVersion);
+        LOG.info("QuadUI {} lauched with JAVA {} under OS {}", acmoVersion, System.getProperty("java.runtime.version"), System.getProperty("os.name"));
         
         modelBtnGrp.getButtonGroupListeners().add(new ButtonGroupListener() {
             @Override
