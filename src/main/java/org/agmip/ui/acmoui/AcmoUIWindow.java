@@ -251,7 +251,7 @@ public class AcmoUIWindow extends Window implements Bindable {
                 final FileBrowserSheet browse;
                 if (outputText.getText().equals("")) {
                     String lastPath = pref.get("last_Output", "");
-                    if (lastPath.equals("") || new File(lastPath).exists()) {
+                    if (lastPath.equals("") || !new File(lastPath).exists()) {
                         browse = new FileBrowserSheet(FileBrowserSheet.Mode.SAVE_TO);
                     } else {
                         File f = new File(lastPath);
