@@ -171,6 +171,7 @@ public class AcmoUIWindow extends Window implements Bindable {
                 if (!FirstSelect) {
                     convertText.setText("");
                     outputText.setText("");
+                    txtStatus.setText("");
                 } else {
                     FirstSelect = false;
                 }
@@ -239,6 +240,7 @@ public class AcmoUIWindow extends Window implements Bindable {
                                 outputText.setText(convertFile.getPath());
                                 pref.put("last_Input", convertFile.getPath());
                             }
+                            txtStatus.setText("");
                         }
                     }
                 });
@@ -268,6 +270,7 @@ public class AcmoUIWindow extends Window implements Bindable {
                             File outputDir = browse.getSelectedFile();
                             outputText.setText(outputDir.getPath());
                             pref.put("last_Output", outputDir.getPath());
+                            txtStatus.setText("");
                         }
                     }
                 });
@@ -281,6 +284,7 @@ public class AcmoUIWindow extends Window implements Bindable {
                     browseOutputDir.setEnabled(true);
                 } else {
                     browseOutputDir.setEnabled(false);
+                    outputText.setText(convertText.getText());
                 }
             }
         });
