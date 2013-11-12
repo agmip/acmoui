@@ -3,9 +3,6 @@ package org.agmip.ui.acmoui;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Properties;
@@ -14,6 +11,7 @@ import org.agmip.acmo.translators.AcmoTranslator;
 import org.agmip.acmo.translators.apsim.ApsimAcmo;
 import org.agmip.acmo.translators.cropgrownau.CropGrowNAUAcmo;
 import org.agmip.acmo.translators.dssat.DssatAcmo;
+import org.agmip.common.Functions;
 import org.agmip.translators.wofost.WofostACMO;
 import org.apache.pivot.beans.Bindable;
 import org.apache.pivot.collections.Map;
@@ -156,7 +154,7 @@ public class AcmoUIWindow extends Window implements Bindable {
         outputText.setText("");
         txtVersion.setText(acmoVersion);
         LOG.info("QuadUI {} lauched with JAVA {} under OS {}", acmoVersion, System.getProperty("java.runtime.version"), System.getProperty("os.name"));
-        
+
         modelBtnGrp.getButtonGroupListeners().add(new ButtonGroupListener() {
             @Override
             public void buttonAdded(ButtonGroup bg, Button button) {
@@ -194,7 +192,7 @@ public class AcmoUIWindow extends Window implements Bindable {
                 try {
                     startTranslation();
                 } catch (Exception ex) {
-                    LOG.error(getStackTrace(ex));
+                    LOG.error(Functions.getStackTrace(ex));
                 }
             }
         });
@@ -345,8 +343,8 @@ public class AcmoUIWindow extends Window implements Bindable {
                                 pb.start();
                             } catch (IOException macEx) {
                                 Alert.alert(MessageType.ERROR, "Your OS can not open the file by using this link", AcmoUIWindow.this);
-                                LOG.error(getStackTrace(winEx));
-                                LOG.error(getStackTrace(macEx));
+                                LOG.error(Functions.getStackTrace(winEx));
+                                LOG.error(Functions.getStackTrace(macEx));
                             }
                         }
                     }
@@ -357,7 +355,7 @@ public class AcmoUIWindow extends Window implements Bindable {
 
         } catch (Exception ex) {
             txtStatus.setText("Failed");
-            LOG.error(getStackTrace(ex));
+            LOG.error(Functions.getStackTrace(ex));
             Alert.alert(MessageType.ERROR, ex.getMessage(), AcmoUIWindow.this);
             LOG.info("=== Cancelled translation job ===");
         }
@@ -399,7 +397,6 @@ public class AcmoUIWindow extends Window implements Bindable {
 //            }
 //        }
     }
-
 //    private void toOutput(HashMap map) {
 //        txtStatus.setText("Generating ACMO.CSV file...");
 //        TranslateToTask task = new TranslateToTask(model, map, outputText.getText());
@@ -450,10 +447,4 @@ public class AcmoUIWindow extends Window implements Bindable {
 //        };
 //        task.execute(new TaskAdapter(listener));
 //    }
-    private static String getStackTrace(Throwable aThrowable) {
-        final Writer result = new StringWriter();
-        final PrintWriter printWriter = new PrintWriter(result);
-        aThrowable.printStackTrace(printWriter);
-        return result.toString();
-    }
 }
