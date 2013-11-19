@@ -42,6 +42,8 @@
                                 </bxml:define>
                                 <RadioButton bxml:id="model-dssat" buttonData="DSSAT" buttonGroup="$models"/>
                                 <RadioButton bxml:id="model-apsim" buttonData="APSIM" buttonGroup="$models"/>
+                                <RadioButton bxml:id="model-wofost" buttonData="WOFOST" buttonGroup="$models"/>
+                                <RadioButton bxml:id="model-cgnau" buttonData="CropGrow-NAU" buttonGroup="$models"/>
                             </BoxPane>
                         </Border>
                     </BoxPane>
