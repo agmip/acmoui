@@ -3,16 +3,16 @@ package org.agmip.ui.acmoui;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.prefs.Preferences;
 import org.agmip.acmo.translators.AcmoTranslator;
 import org.agmip.acmo.translators.apsim.ApsimAcmo;
+import org.agmip.acmo.translators.cropgrownau.CropGrowNAUAcmo;
 import org.agmip.acmo.translators.dssat.DssatAcmo;
+import org.agmip.common.Functions;
+import org.agmip.translators.wofost.WofostACMO;
 import org.apache.pivot.beans.Bindable;
 import org.apache.pivot.collections.Map;
 import org.apache.pivot.util.Filter;
@@ -56,6 +56,8 @@ public class AcmoUIWindow extends Window implements Bindable {
     private ButtonGroup modelBtnGrp = null;
     private RadioButton modelApsim = null;
     private RadioButton modelDssat = null;
+    private RadioButton modelWofost = null;
+    private RadioButton modelCgnau = null;
     private Boolean FirstSelect = true;
     private Label txtStatus = null;
     private Label txtVersion = null;
@@ -142,14 +144,16 @@ public class AcmoUIWindow extends Window implements Bindable {
         modelBtnGrp = (ButtonGroup) ns.get("models");
         modelApsim = (RadioButton) ns.get("model-apsim");
         modelDssat = (RadioButton) ns.get("model-dssat");
+        modelWofost = (RadioButton) ns.get("model-wofost");
+        modelCgnau = (RadioButton) ns.get("model-cgnau");
         outputLB = (LinkButton) ns.get("outputLB");
 
 //        radioBtnGroup.add(modelApsim);
 //        radioBtnGroup.add(modelDssat);
-
         outputText.setText("");
         txtVersion.setText(acmoVersion);
-        
+        LOG.info("ACMOUI {} lauched with JAVA {} under OS {}", acmoVersion, System.getProperty("java.runtime.version"), System.getProperty("os.name"));
+
         modelBtnGrp.getButtonGroupListeners().add(new ButtonGroupListener() {
             @Override
             public void buttonAdded(ButtonGroup bg, Button button) {
@@ -164,6 +168,7 @@ public class AcmoUIWindow extends Window implements Bindable {
                 if (!FirstSelect) {
                     convertText.setText("");
                     outputText.setText("");
+                    txtStatus.setText("");
                 } else {
                     FirstSelect = false;
                 }
@@ -186,7 +191,7 @@ public class AcmoUIWindow extends Window implements Bindable {
                 try {
                     startTranslation();
                 } catch (Exception ex) {
-                    LOG.error(getStackTrace(ex));
+                    LOG.error(Functions.getStackTrace(ex));
                 }
             }
         });
@@ -232,6 +237,7 @@ public class AcmoUIWindow extends Window implements Bindable {
                                 outputText.setText(convertFile.getPath());
                                 pref.put("last_Input", convertFile.getPath());
                             }
+                            txtStatus.setText("");
                         }
                     }
                 });
@@ -244,7 +250,7 @@ public class AcmoUIWindow extends Window implements Bindable {
                 final FileBrowserSheet browse;
                 if (outputText.getText().equals("")) {
                     String lastPath = pref.get("last_Output", "");
-                    if (lastPath.equals("") || new File(lastPath).exists()) {
+                    if (lastPath.equals("") || !new File(lastPath).exists()) {
                         browse = new FileBrowserSheet(FileBrowserSheet.Mode.SAVE_TO);
                     } else {
                         File f = new File(lastPath);
@@ -261,6 +267,7 @@ public class AcmoUIWindow extends Window implements Bindable {
                             File outputDir = browse.getSelectedFile();
                             outputText.setText(outputDir.getPath());
                             pref.put("last_Output", outputDir.getPath());
+                            txtStatus.setText("");
                         }
                     }
                 });
@@ -274,6 +281,7 @@ public class AcmoUIWindow extends Window implements Bindable {
                     browseOutputDir.setEnabled(true);
                 } else {
                     browseOutputDir.setEnabled(false);
+                    outputText.setText(convertText.getText());
                 }
             }
         });
@@ -289,6 +297,12 @@ public class AcmoUIWindow extends Window implements Bindable {
         } else if (modelDssat.isSelected()) {
             model = "DSSAT";
             translator = new DssatAcmo();
+        } else if (modelWofost.isSelected()) {
+            model = "WOFOST";
+            translator = new WofostACMO();
+        } else if (modelCgnau.isSelected()) {
+            model = "CropGrow-NAU";
+            translator = new CropGrowNAUAcmo();
         } else {
             Alert.alert(MessageType.ERROR, "You need to select an output data source", AcmoUIWindow.this);
             return;
@@ -305,7 +319,7 @@ public class AcmoUIWindow extends Window implements Bindable {
 
         try {
             output = translator.execute(convertText.getText(), outputText.getText());
-            if (output == null && output.exists()) {
+            if (output == null || !output.exists()) {
                 txtStatus.setText("Cancelled");
                 Alert.alert(MessageType.ERROR, "No file has been generated, please check the input file", AcmoUIWindow.this);
                 LOG.info("No file has been generated.");
@@ -328,8 +342,8 @@ public class AcmoUIWindow extends Window implements Bindable {
                                 pb.start();
                             } catch (IOException macEx) {
                                 Alert.alert(MessageType.ERROR, "Your OS can not open the file by using this link", AcmoUIWindow.this);
-                                LOG.error(getStackTrace(winEx));
-                                LOG.error(getStackTrace(macEx));
+                                LOG.error(Functions.getStackTrace(winEx));
+                                LOG.error(Functions.getStackTrace(macEx));
                             }
                         }
                     }
@@ -340,7 +354,7 @@ public class AcmoUIWindow extends Window implements Bindable {
 
         } catch (Exception ex) {
             txtStatus.setText("Failed");
-            LOG.error(getStackTrace(ex));
+            LOG.error(Functions.getStackTrace(ex));
             Alert.alert(MessageType.ERROR, ex.getMessage(), AcmoUIWindow.this);
             LOG.info("=== Cancelled translation job ===");
         }
@@ -382,7 +396,6 @@ public class AcmoUIWindow extends Window implements Bindable {
 //            }
 //        }
     }
-
 //    private void toOutput(HashMap map) {
 //        txtStatus.setText("Generating ACMO.CSV file...");
 //        TranslateToTask task = new TranslateToTask(model, map, outputText.getText());
@@ -433,10 +446,4 @@ public class AcmoUIWindow extends Window implements Bindable {
 //        };
 //        task.execute(new TaskAdapter(listener));
 //    }
-    private static String getStackTrace(Throwable aThrowable) {
-        final Writer result = new StringWriter();
-        final PrintWriter printWriter = new PrintWriter(result);
-        aThrowable.printStackTrace(printWriter);
-        return result.toString();
-    }
 }
