@@ -1,10 +1,10 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.agmip.ui</groupId>
     <artifactId>acmoui</artifactId>
-    <version>1.2-SNAPSHOT</version>
+    <version>1.2.2-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>acmoui</name>
@@ -14,7 +14,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jdk.version>1.6</jdk.version>
         <product.buildtype>dev</product.buildtype>
-        <product.buildversion>beta7</product.buildversion>
+        <product.buildversion>beta3</product.buildversion>
         <product.buildts>${maven.build.timestamp}</product.buildts>
     </properties>
 
@@ -48,17 +48,17 @@
         <dependency>
             <groupId>org.agmip</groupId>
             <artifactId>acmo</artifactId>
-            <version>1.1.7</version>
+            <version>1.1.8</version>
         </dependency>
         <dependency>
             <groupId>org.agmip.translators.acmo</groupId>
             <artifactId>acmo-dssat</artifactId>
-            <version>1.0.2</version>
+            <version>1.0.3</version>
         </dependency>
         <dependency>
             <groupId>org.agmip.translators.acmo</groupId>
             <artifactId>acmo-apsim</artifactId>
-            <version>1.0.1</version>
+            <version>1.0.2</version>
         </dependency>
         <dependency>
             <groupId>org.agmip.translators.acmo</groupId>

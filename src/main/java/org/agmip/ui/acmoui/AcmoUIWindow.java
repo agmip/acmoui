@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Properties;
 import java.util.prefs.Preferences;
 import org.agmip.acmo.translators.AcmoTranslator;
+import org.agmip.acmo.translators.AcmoVersionRecordable;
 import org.agmip.acmo.translators.apsim.ApsimAcmo;
 import org.agmip.acmo.translators.cropgrownau.CropGrowNAUAcmo;
 import org.agmip.acmo.translators.dssat.DssatAcmo;
@@ -306,6 +307,9 @@ public class AcmoUIWindow extends Window implements Bindable {
         } else {
             Alert.alert(MessageType.ERROR, "You need to select an output data source", AcmoUIWindow.this);
             return;
+        }
+        if (translator instanceof AcmoVersionRecordable) {
+            ((AcmoVersionRecordable) translator).recordAcmoVersion(acmoVersion);
         }
 
         convertIndicator.setActive(true);

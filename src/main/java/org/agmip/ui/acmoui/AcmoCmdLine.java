@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 import org.agmip.acmo.translators.AcmoTranslator;
+import org.agmip.acmo.translators.AcmoVersionRecordable;
 import org.agmip.acmo.translators.apsim.ApsimAcmo;
 import org.agmip.acmo.translators.cropgrownau.CropGrowNAUAcmo;
 import org.agmip.acmo.translators.dssat.DssatAcmo;
@@ -71,7 +72,7 @@ public class AcmoCmdLine {
 
     public void run(String[] args) {
 
-        LOG.info("QuadUI {} lauched with JAVA {} under OS {}", acmoVersion, System.getProperty("java.runtime.version"), System.getProperty("os.name"));
+        LOG.info("ACMOUI {} lauched with JAVA {} under OS {}", acmoVersion, System.getProperty("java.runtime.version"), System.getProperty("os.name"));
         readCommand(args);
         if (helpFlg) {
             printHelp();
@@ -165,6 +166,9 @@ public class AcmoCmdLine {
         } else {
             LOG.error("The crop model {} is not supported by ACMOUI yet", model.toString());
             return;
+        }
+        if (translator instanceof AcmoVersionRecordable) {
+            ((AcmoVersionRecordable) translator).recordAcmoVersion(acmoVersion);
         }
         LOG.info("Generating ACMO_{}.CSV file...", model.toString());
 
